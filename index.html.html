@@ -1,0 +1,1023 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ShelfIQ — Smart Library Discovery</title>
+<meta name="theme-color" content="#0b86a3" />
+<style>
+:root{
+  --bg:#f5f5f5;
+  --surface:#ffffff;
+  --surface-2:#f0f0f0;
+  --text:#171717;
+  --muted:#737373;
+  --line:#dedede;
+  --teal:#0b86a3;
+  --teal-soft:#e8f4f7;
+  --green:#16954a;
+  --green-soft:#e7f6ed;
+  --red:#dc2626;
+  --red-soft:#fdecec;
+  --purple:#c81861;
+  --shadow:0 1px 2px rgba(0,0,0,.04),0 10px 30px rgba(0,0,0,.05);
+  --radius:16px;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;background:var(--bg);color:var(--text)}
+@keyframes slideUpIn{
+  from{opacity:0;transform:translateY(42px)}
+  to{opacity:1;transform:translateY(0)}
+}
+.page.active{animation:slideUpIn .65s cubic-bezier(.22,1,.36,1) both}
+button,input,select,textarea{font:inherit}
+button{cursor:pointer}
+a{color:inherit;text-decoration:none}
+.hidden{display:none!important}
+.app-header{height:64px;background:#fff;border-bottom:1px solid #e4e4e4;display:flex;align-items:center;position:sticky;top:0;z-index:50}
+.header-inner{width:100%;padding:0 16px;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:18px}
+.brand{display:flex;align-items:center;gap:12px;font-weight:750;font-size:18px}
+.brand-mark{width:34px;height:34px;border-radius:9px;background:#1693af;display:grid;place-items:center;box-shadow:inset 0 1px 0 rgba(255,255,255,.25)}
+.brand-mark svg{width:22px;height:22px;fill:none;stroke:#fff;stroke-width:2}
+.nav{display:flex;align-items:center;gap:4px;justify-content:center}
+.nav button{border:0;background:transparent;padding:10px 16px;border-radius:12px;color:#242424;font-weight:650}
+.nav button.active{background:#e7f3f6;color:#0b6f8c}
+.profile{width:40px;height:40px;border-radius:50%;background:#c71961;color:#fff;display:grid;place-items:center;font-weight:800;flex:0 0 auto}
+.header-tools{justify-self:end;display:flex;align-items:center;gap:9px}
+.admin-mode-toggle{height:38px;border:1px solid #d8d8d8;background:#fff;border-radius:999px;padding:0 12px;display:flex;align-items:center;gap:8px;font-size:12px;font-weight:750;color:#666;white-space:nowrap}
+.admin-mode-toggle.on{background:#e8f4f7;border-color:#b8dce4;color:#0b6f8c}
+.mode-dot{width:8px;height:8px;border-radius:50%;background:#b7b7b7;box-shadow:0 0 0 3px #efefef}
+.admin-mode-toggle.on .mode-dot{background:#0b86a3;box-shadow:0 0 0 3px #d7eef3}
+.page{display:none;padding:28px 20px 42px;max-width:1400px;margin:0 auto}
+.page.active{display:block}
+.page-top{display:flex;align-items:center;justify-content:space-between;gap:18px;margin-bottom:20px}
+.page-title{font-size:30px;line-height:1.1;margin:0;font-weight:800;letter-spacing:-.7px}
+.top-actions{display:flex;align-items:center;gap:10px}
+.search-sm{height:52px;width:260px;border:1px solid #d9d9d9;background:#fff;border-radius:12px;padding:0 16px;outline:none}
+.search-sm:focus,.field input:focus,.field select:focus,.field textarea:focus{border-color:#a7bac0;box-shadow:0 0 0 3px rgba(11,134,163,.08)}
+.btn{height:46px;border-radius:12px;border:1px solid #d7d7d7;background:#fff;padding:0 18px;font-weight:700;color:#202020}
+.btn:hover{background:#fafafa}
+.btn.primary{background:#0b86a3;color:#fff;border-color:#0b86a3}
+.btn.primary:hover{background:#08778f}
+.btn.danger{background:#ef1111;color:#fff;border-color:#ef1111}
+.btn.small{height:38px;padding:0 12px;border-radius:10px;font-size:13px}
+.hero-spacer{height:2px}
+.card-shell{background:#fff;border:1px solid #ddd;border-radius:18px;box-shadow:0 1px 1px rgba(0,0,0,.02)}
+.vibe-shell{padding:20px 26px 26px}
+.section-line{display:flex;align-items:center;gap:10px;margin-bottom:16px}
+.section-line h2{font-size:20px;margin:0;font-weight:750}
+.section-line .sub{font-size:16px;color:#777}
+.vibe-bar{background:#ededed;border-radius:999px;padding:4px;display:flex;gap:3px;overflow:auto}
+.vibe-btn{border:0;background:transparent;border-radius:999px;padding:12px 18px;display:flex;align-items:center;gap:9px;white-space:nowrap;color:#666;font-weight:650}
+.vibe-btn.active{background:#fff;color:#202020;box-shadow:0 1px 3px rgba(0,0,0,.16)}
+.vibe-btn .icon{font-size:19px}
+.discover-layout{display:grid;grid-template-columns:302px 1fr;gap:28px;margin-top:24px}
+.genre-panel{padding:24px 26px;align-self:start}
+.genre-title{font-size:18px;font-weight:750;margin:0 0 24px}
+.genre-group-label{font-size:14px;font-weight:700;color:#5c5c5c;margin-bottom:9px}
+.genre-list{display:grid;gap:11px}
+.genre-option{display:flex;align-items:center;gap:10px;font-size:15px;color:#303030;cursor:pointer}
+.genre-option input{appearance:none;width:21px;height:21px;border:1px solid #999;border-radius:50%;margin:0;position:relative}
+.genre-option input:checked{border-color:#0b86a3}
+.genre-option input:checked::after{content:"";position:absolute;inset:4px;border-radius:50%;background:#0b86a3}
+.summary-text{line-height:1.55;color:#50545d}
+.results-tools{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.results-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:14px 0 14px}
+.results-head strong{font-size:16px}
+.count{font-size:14px;color:#777}
+.book-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:22px}
+.book-card{background:#fff;border:1px solid #ddd;border-radius:16px;overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.03);transition:transform .16s,box-shadow .16s;cursor:pointer}
+.book-card:hover{transform:translateY(-3px);box-shadow:0 12px 24px rgba(0,0,0,.08)}
+.cover-box{position:relative;aspect-ratio:3/4;background:#ececec;overflow:hidden}
+.cover-box img{width:100%;height:100%;object-fit:cover;display:block}
+.cover-fallback{position:absolute;inset:0;display:none;align-items:flex-end;padding:18px;background:linear-gradient(155deg,#d9e4e7,#eef0f1);color:#334;}
+.cover-fallback .fallback-title{font-weight:800;font-size:22px;line-height:1.08}
+.status-badge{position:absolute;right:12px;top:12px;padding:7px 12px;border-radius:999px;background:#fff;font-size:12px;font-weight:750;box-shadow:0 3px 10px rgba(0,0,0,.10)}
+.status-badge.available{color:#202020}
+.status-badge.issued{color:#b91c1c}
+.book-body{padding:15px 16px 17px}
+.book-title{font-size:16px;font-weight:770;line-height:1.27;margin:0 0 5px}
+.book-author{color:#777;font-size:14px;margin-bottom:11px}
+.book-meta{border-top:1px solid #e7e7e7;padding-top:10px;font-size:13px;display:grid;gap:7px;color:#4f4f4f}
+.meta-row{display:flex;gap:7px;align-items:flex-start}
+.meta-icon{width:18px;text-align:center}
+.tag-row{color:#777;line-height:1.35}
+.empty-state{grid-column:1/-1;padding:50px 20px;text-align:center;border:1px dashed #cfcfcf;border-radius:16px;color:#727272;background:#fff}
+/* Catalog */
+.kpi-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-bottom:26px}
+.kpi{padding:24px 20px;min-height:138px}
+.kpi-label{color:#777;font-size:15px;margin-bottom:5px}
+.kpi-value{font-size:36px;font-weight:820;letter-spacing:-1px}
+.kpi-sub{color:#777;font-size:14px;margin-top:3px}
+.kpi-sub.green{color:var(--green);font-weight:700}
+.pill-tabs{display:flex;gap:4px;background:#ececec;border-radius:999px;padding:4px;width:max-content;max-width:100%;overflow:auto;margin:4px 0 18px}
+.pill-tab{border:0;background:transparent;border-radius:999px;padding:11px 18px;color:#686868;font-weight:650;white-space:nowrap}
+.pill-tab.active{background:#fff;color:#222;box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.table-shell{overflow:auto}
+.catalog-table{width:100%;border-collapse:collapse;min-width:900px}
+.catalog-table th,.catalog-table td{padding:15px 22px;border-bottom:1px solid #eaeaea;text-align:left}
+.catalog-table th{font-size:12px;text-transform:uppercase;letter-spacing:.4px;color:#777;background:#fbfbfb}
+.catalog-table td{font-size:14px;color:#4a4a4a}
+.catalog-table tr:hover td{background:#fcfcfc}
+.status-text.available{color:#4a4a4a}
+.status-text.issued{color:#777}
+.shelf-map{display:grid;grid-template-columns:repeat(5,1fr);gap:12px}
+.shelf-tile{padding:18px;border-radius:16px;background:#fff;border:1px solid #ddd;cursor:pointer}
+.shelf-tile:hover{border-color:#a8c3ca;box-shadow:0 8px 20px rgba(0,0,0,.05)}
+.shelf-letter{font-size:24px;font-weight:820}
+.shelf-name{color:#777;font-size:13px;margin-top:2px}
+.shelf-count{margin-top:14px;font-weight:700}
+.shelf-note{font-size:12px;color:#888;margin-top:2px}
+/* Admin */
+.admin-layout{display:grid;grid-template-columns:1.15fr .8fr;gap:28px;align-items:start}
+.admin-table-shell{overflow:auto}
+.admin-table{width:100%;border-collapse:collapse;min-width:760px}
+.admin-table th,.admin-table td{padding:14px 14px;border-bottom:1px solid #ebebeb;text-align:left}
+.admin-table th{font-size:12px;text-transform:uppercase;letter-spacing:.4px;color:#777;background:#fbfbfb}
+.admin-table td{font-size:14px;color:#4e4e4e}
+.admin-table tr.selectable{cursor:pointer}
+.admin-table tr.selected td{background:#f3f7f8}
+.admin-form{padding:24px 24px 20px}
+.admin-form h2{font-size:21px;margin:0 0 10px}
+.admin-form p{color:#777;line-height:1.55;margin:0 0 20px}
+.form-grid{display:grid;gap:16px}
+.field label{display:block;font-weight:700;font-size:13px;color:#4c4c4c;margin-bottom:7px}
+.field input,.field select,.field textarea{width:100%;height:46px;border:1px solid #dcdcdc;border-radius:11px;padding:0 13px;outline:none;background:#fff;color:#222}
+.field textarea{height:82px;padding:11px 13px;resize:vertical}
+.status-picks{display:grid;gap:9px}
+.status-pick{display:flex;align-items:center;gap:10px;border:1px solid #ddd;padding:12px 13px;border-radius:11px;cursor:pointer}
+.status-pick input{appearance:none;width:18px;height:18px;border-radius:50%;border:1px solid #999;margin:0;position:relative}
+.status-pick input:checked{border-color:#0b86a3}
+.status-pick input:checked::after{content:"";position:absolute;inset:3px;border-radius:50%;background:#0b86a3}
+.form-actions{display:flex;gap:10px;align-items:center;margin-top:5px}
+.record-controls{padding:18px 24px 22px;margin-top:16px}
+.record-controls h3{font-size:17px;margin:0 0 8px}
+.record-controls p{font-size:13px;color:#777;margin:0 0 16px}
+.control-row{display:flex;flex-wrap:wrap;gap:8px}
+.sync-box{padding:16px 18px;margin-top:18px;background:#f6fbfc;border:1px solid #d9ebef;border-radius:14px}
+.sync-box strong{display:block;margin-bottom:6px}
+.sync-box p{font-size:12px;color:#777;margin:0 0 10px;line-height:1.45}
+.sync-line{display:flex;gap:8px}
+.sync-line input{flex:1;height:40px;border:1px solid #d6d6d6;border-radius:9px;padding:0 10px}
+/* Modal / toast */
+.modal-backdrop{position:fixed;inset:0;background:rgba(14,18,20,.50);display:none;align-items:center;justify-content:center;padding:20px;z-index:100}
+.modal-backdrop.show{display:flex}
+.modal{background:#fff;width:min(840px,100%);max-height:90vh;overflow:auto;border-radius:18px;box-shadow:0 30px 90px rgba(0,0,0,.25)}
+.modal-top{display:flex;justify-content:space-between;align-items:center;padding:16px 20px;border-bottom:1px solid #e6e6e6}
+.modal-close{width:36px;height:36px;border:0;background:#f1f1f1;border-radius:50%;font-size:20px}
+.detail-grid{display:grid;grid-template-columns:250px 1fr;gap:26px;padding:24px}
+.detail-cover{aspect-ratio:3/4;background:#ececec;border-radius:14px;overflow:hidden;position:relative}
+.detail-cover img{width:100%;height:100%;object-fit:cover}
+.detail-info h2{font-size:28px;line-height:1.15;margin:0 0 8px}
+.detail-info .byline{color:#777;margin-bottom:18px}
+.detail-item{border-top:1px solid #e9e9e9;padding:14px 0}
+.detail-label{font-size:11px;color:#777;text-transform:uppercase;letter-spacing:.5px;font-weight:800;margin-bottom:6px}
+.tags{display:flex;flex-wrap:wrap;gap:7px}
+.quiz-launch{white-space:nowrap}
+.vibe-result-strip{margin-top:16px;background:#f7fafb;border:1px solid #dcecef;border-radius:14px;padding:13px 14px;display:flex;align-items:center;gap:11px}
+.vibe-result-strip .result-dot{width:34px;height:34px;border-radius:10px;background:#e8f4f7;display:grid;place-items:center;font-size:18px}
+.vibe-result-strip div:nth-child(2){flex:1;min-width:0}
+.vibe-result-strip strong{display:block;font-size:14px}
+.vibe-result-strip span{display:block;color:#777;font-size:12px;margin-top:2px}
+.quiz-modal{width:min(720px,100%)}
+.quiz-wrap{padding:24px}
+.quiz-progress{font-size:12px;color:#777;margin-top:3px}
+.quiz-progressbar{height:7px;background:#ededed;border-radius:999px;overflow:hidden;margin-bottom:24px}
+.quiz-progressbar span{display:block;height:100%;width:16.66%;background:#0b86a3;border-radius:999px;transition:.22s}
+.quiz-question h2{font-size:26px;line-height:1.2;margin:0 0 8px}
+.quiz-question p{margin:0;color:#777;font-size:14px}
+.quiz-options{display:grid;gap:10px;margin:22px 0}
+.quiz-option{width:100%;text-align:left;border:1px solid #dedede;background:#fff;border-radius:13px;padding:14px 15px;display:flex;align-items:center;gap:12px;transition:.16s}
+.quiz-option:hover{border-color:#86b9c4;background:#f7fbfc;transform:translateY(-1px)}
+.quiz-option.selected{border-color:#0b86a3;background:#eef8fa;box-shadow:0 0 0 2px rgba(11,134,163,.09)}
+.quiz-letter{width:30px;height:30px;border-radius:9px;background:#f1f2f2;display:grid;place-items:center;font-weight:800;color:#555;flex:0 0 auto}
+.quiz-option.selected .quiz-letter{background:#0b86a3;color:#fff}
+.quiz-footer{display:flex;align-items:center;gap:10px;justify-content:space-between}
+.quiz-result{border:1px solid #dcecef;background:#f6fbfc;border-radius:16px;padding:20px;text-align:center}
+.quiz-result .big-vibe{font-size:30px;font-weight:850;margin:3px 0 6px}
+.quiz-result p{margin:0 0 16px;color:#666}
+.quiz-result-actions{display:flex;justify-content:center;gap:8px}
+
+.tag{padding:6px 9px;background:#edf5f6;border-radius:999px;font-size:12px;color:#176c7d;font-weight:700}
+.toast{position:fixed;left:50%;bottom:22px;transform:translate(-50%,20px);opacity:0;pointer-events:none;background:#1f1f1f;color:#fff;padding:12px 16px;border-radius:10px;z-index:120;font-weight:700;font-size:14px;transition:.2s}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+#page-catalog .kpi-grid{grid-template-columns:1fr;max-width:460px}
+@media(max-width:1050px){
+  .discover-layout{grid-template-columns:260px 1fr;gap:20px}
+  .book-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .shelf-map{grid-template-columns:repeat(4,1fr)}
+  .admin-layout{grid-template-columns:1fr}
+}
+@media(max-width:760px){
+  .header-inner{grid-template-columns:1fr auto}
+  .nav{position:absolute;top:64px;left:0;right:0;background:#fff;border-bottom:1px solid #e4e4e4;padding:7px;display:none}
+  .nav.open{display:flex}
+  .page{padding:20px 14px 35px}
+  .page-title{font-size:25px}
+  .page-top{align-items:flex-start;flex-direction:column}
+  .top-actions{width:100%}
+  .search-sm{flex:1;width:auto}
+  .vibe-shell{padding:18px}
+  .section-line{align-items:flex-start;flex-direction:column;gap:4px}
+  .results-head{align-items:flex-start;flex-direction:column}
+  .results-tools{width:100%;justify-content:space-between;flex-wrap:wrap}
+  .discover-layout{grid-template-columns:1fr}
+  .genre-panel{padding:20px}
+  .genre-list{grid-template-columns:repeat(2,minmax(0,1fr));column-gap:16px}
+  .kpi-grid{grid-template-columns:1fr}
+  .shelf-map{grid-template-columns:repeat(2,1fr)}
+  .detail-grid{grid-template-columns:1fr}
+  .detail-cover{width:190px}
+  .header-tools{justify-self:end}
+  .admin-mode-toggle{font-size:11px;padding:0 10px}
+}
+@media(max-width:470px){
+  .genre-list{grid-template-columns:1fr}
+  .book-grid{grid-template-columns:1fr}
+  .shelf-map{grid-template-columns:1fr}
+  .form-actions{flex-direction:column;align-items:stretch}
+  .form-actions .btn{width:100%}
+}
+</style>
+</head>
+<body>
+
+<header class="app-header">
+  <div class="header-inner">
+    <div class="brand">
+      <div class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24">
+          <path d="M4 6.5A2.5 2.5 0 0 1 6.5 4H10v11H6.5A2.5 2.5 0 0 0 4 17.5z"/>
+          <path d="M20 6.5A2.5 2.5 0 0 0 17.5 4H14v11h3.5A2.5 2.5 0 0 1 20 17.5z"/>
+          <path d="M4 18h16"/>
+          <path d="M10 4.5h4"/>
+        </svg>
+      </div>
+      <span>ShelfIQ</span>
+    </div>
+
+    <nav class="nav" id="mainNav">
+      <button data-page="discover" class="active">Discover</button>
+      <button data-page="catalog">Catalog</button>
+      <button data-page="admin">Admin Panel</button>
+    </nav>
+
+    <div class="header-tools">
+      <button class="admin-mode-toggle" id="adminModeBtn" type="button" aria-pressed="false">
+        <span class="mode-dot"></span><span id="adminModeLabel">Admin Mode: Off</span>
+      </button>
+      <div class="profile" title="Student / Staff access">V</div>
+    </div>
+  </div>
+</header>
+
+<!-- DISCOVER -->
+<main id="page-discover" class="page active">
+  <div class="page-top">
+    <h1 class="page-title">Discover Books</h1>
+    <div class="top-actions">
+      <input id="discoverSearch" class="search-sm" placeholder="Search title, author, tag..." />
+      <button class="btn" id="shelfMapBtn">Browse Shelf Map</button>
+    </div>
+  </div>
+
+  <section class="card-shell vibe-shell">
+    <div class="section-line">
+      <div>
+        <h2>Pick Your Reading Vibe</h2>
+        <span class="sub">Answer 6 quick questions and ShelfIQ will match books to your interests</span>
+      </div>
+      <button class="btn primary quiz-launch" id="quizLaunchBtn">Take the 6-Question Quiz</button>
+    </div>
+    <div class="vibe-result-strip" id="vibeResultStrip">
+      <span class="result-dot">✨</span>
+      <div><strong id="vibeResultTitle">No vibe selected yet</strong><span id="vibeResultSub">Take the quiz to get a personalized reading match.</span></div>
+    </div>
+  </section>
+
+  <section class="discover-layout">
+    <aside class="card-shell genre-panel">
+      <h2 class="genre-title">Explore Genres</h2>
+      <div class="genre-group-label">Genre</div>
+      <div class="genre-list" id="genreList"></div>
+    </aside>
+
+    <section>
+      <div class="results-head">
+        <strong><span id="discoverResultCount">0</span> <span id="discoverActionLabel">Manage Titles (Admin)</span></strong>
+        <div class="results-tools">
+          <span class="count" id="discoverResultHint"></span>
+          <button class="btn hidden" id="retakeQuizResultsBtn">Retake Quiz</button>
+          <button class="btn hidden" id="returnAllBooksBtn">← Return to All Books</button>
+        </div>
+      </div>
+      <div class="book-grid" id="discoverGrid"></div>
+    </section>
+  </section>
+</main>
+
+<!-- CATALOG -->
+<main id="page-catalog" class="page">
+  <div class="page-top">
+    <h1 class="page-title">Library Catalog</h1>
+    <div class="top-actions">
+      <input id="catalogSearch" class="search-sm" placeholder="Quick find shelf or title..." />
+      <button class="btn" id="manageTitlesBtn">Manage Titles</button>
+    </div>
+  </div>
+
+  <section class="kpi-grid">
+    <div class="card-shell kpi">
+      <div class="kpi-label">Total Cataloged</div>
+      <div class="kpi-value" id="kpiTotal">0</div>
+      <div class="kpi-sub">Active collection</div>
+    </div>
+  </section>
+
+  <div class="pill-tabs" id="catalogTabs">
+    <button class="pill-tab active" data-filter="all">All Locations &amp; Statuses</button>
+    <button class="pill-tab" data-filter="issued">Currently Issued</button>
+  </div>
+
+  <section class="card-shell table-shell">
+    <table class="catalog-table">
+      <thead>
+        <tr><th>Call ID</th><th>Title</th><th>Author</th><th>Genre</th><th>Shelf Location</th><th>Status</th></tr>
+      </thead>
+      <tbody id="catalogBody"></tbody>
+    </table>
+  </section>
+
+  <section style="margin-top:28px">
+    <div class="section-line"><h2>Browse Shelf Map</h2><span class="sub">Jump straight to a physical shelf</span></div>
+    <div class="shelf-map" id="shelfMapGrid"></div>
+  </section>
+</main>
+
+<!-- ADMIN -->
+<main id="page-admin" class="page">
+  <div class="page-top">
+    <h1 class="page-title">Catalog Administration</h1>
+    <div class="top-actions">
+      <button class="btn" id="auditBtn">Batch Barcode Audit</button>
+    </div>
+  </div>
+
+  <section class="kpi-grid">
+    <div class="card-shell kpi">
+      <div class="kpi-label">Total Catalog Titles</div>
+      <div class="kpi-value" id="adminTotal">0</div>
+    </div>
+    <div class="card-shell kpi">
+      <div class="kpi-label">On Shelf &amp; Available</div>
+      <div class="kpi-value" id="adminAvailable">0 titles</div>
+      <div class="kpi-sub green">Ready for lending</div>
+    </div>
+    <div class="card-shell kpi">
+      <div class="kpi-label">Currently Issued</div>
+      <div class="kpi-value" id="adminIssued">0 titles</div>
+      <div class="kpi-sub">Checked out to students / teachers</div>
+    </div>
+  </section>
+
+  <section class="admin-layout">
+    <div>
+      <div class="section-line" style="margin-left:2px"><h2>Active Library Records</h2></div>
+      <section class="card-shell admin-table-shell">
+        <table class="admin-table">
+          <thead><tr><th>Accession ID</th><th>Book Title</th><th>Author</th><th>Genre</th><th>Shelf Location</th><th>Status</th></tr></thead>
+          <tbody id="adminBody"></tbody>
+        </table>
+      </section>
+
+      <section class="card-shell record-controls">
+        <h3>Selected Record Controls</h3>
+        <p>Quick-modify circulation status or archive a record directly without uncataloging.</p>
+        <div class="control-row">
+          <button class="btn small" id="markIssuedBtn">Mark as Issued</button>
+          <button class="btn small" id="markReturnedBtn">Mark as Returned</button>
+          <button class="btn small danger" id="removeSelectedBtn">Weed / Remove Book</button>
+        </div>
+      </section>
+    </div>
+
+    <aside class="card-shell admin-form">
+      <h2>Add / Edit Book Record</h2>
+      <p>Enter shelf placement, thematic tags, and metadata to publish to the student discovery feed.</p>
+      <form id="bookForm" class="form-grid">
+        <div class="field">
+          <label for="fId">Accession / Barcode ID</label>
+          <input id="fId" placeholder="e.g. B151" />
+        </div>
+        <div class="field">
+          <label for="fTitle">Book Title</label>
+          <input id="fTitle" placeholder="e.g. The Lightning Thief" required />
+        </div>
+        <div class="field">
+          <label for="fAuthor">Author</label>
+          <input id="fAuthor" placeholder="Full author name" required />
+        </div>
+        <div class="field">
+          <label for="fGenre">Genre Section</label>
+          <select id="fGenre" required></select>
+        </div>
+        <div class="field">
+          <label for="fTags">Interest &amp; Discovery Tags</label>
+          <input id="fTags" placeholder="Comma-separated, e.g. Magic, Quests, Dragons" required />
+        </div>
+        <div class="field">
+          <label for="fLocation">Physical Shelf Location</label>
+          <input id="fLocation" placeholder="e.g. Shelf A-4 or Display Pod 2" required />
+        </div>
+        <div class="field">
+          <label>Circulation Status</label>
+          <div class="status-picks">
+            <label class="status-pick"><input type="radio" name="fStatus" value="Available" checked /> <span>Available on shelf</span></label>
+            <label class="status-pick"><input type="radio" name="fStatus" value="Issued" /> <span>Issued to student / teacher</span></label>
+          </div>
+        </div>
+        <div class="field">
+          <label for="fCover">Cover Image URL</label>
+          <input id="fCover" type="url" placeholder="https://..." required />
+        </div>
+        <div class="form-actions">
+          <button type="submit" class="btn primary" id="saveBookBtn">Save Book Record</button>
+          <button type="button" class="btn" id="clearFormBtn">Clear Fields</button>
+        </div>
+      </form>
+</div>
+    </aside>
+  </section>
+</main>
+
+<!-- BOOK DETAIL MODAL -->
+<div class="modal-backdrop" id="bookModal">
+  <div class="modal">
+    <div class="modal-top"><strong>Book Details</strong><button class="modal-close" id="bookModalClose">×</button></div>
+    <div id="bookDetail"></div>
+  </div>
+</div>
+
+<!-- READING VIBE QUIZ MODAL -->
+<div class="modal-backdrop" id="quizModal">
+  <div class="modal quiz-modal">
+    <div class="modal-top"><div><strong>Find My Reading Vibe</strong><div class="quiz-progress" id="quizProgress">Question 1 of 6</div></div><button class="modal-close" id="quizClose">×</button></div>
+    <div class="quiz-wrap">
+      <div class="quiz-progressbar"><span id="quizProgressFill"></span></div>
+      <div class="quiz-question" id="quizQuestion"></div>
+      <div class="quiz-options" id="quizOptions"></div>
+      <div class="quiz-footer" id="quizFooter"><span class="sub">Choose the answer that feels most like you.</span></div>
+      <div class="quiz-result" id="quizResult" style="display:none"></div>
+    </div>
+  </div>
+</div>
+
+<!-- SHELF MAP MODAL -->
+<div class="modal-backdrop" id="shelfModal">
+  <div class="modal">
+    <div class="modal-top"><strong>Shelf Map</strong><button class="modal-close" id="shelfModalClose">×</button></div>
+    <div style="padding:22px">
+      <p style="margin:0 0 16px;color:#777">Select a shelf to see the books currently cataloged there.</p>
+      <div class="shelf-map" id="modalShelfGrid"></div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const INITIAL_BOOKS = [{"ID":"B101","Book Title":"Harry Potter and the Sorcerer's Stone","Author":"J.K. Rowling","Genre":"Fantasy","Interest Tags":"Magic, Adventure, School, Wizards","Location":"Shelf A-1","Status":"Available","Cover Image URL":"https://m.media-amazon.com/images/I/81DI+BAN2SL._AC_UF1000,1000_QL80_.jpg"},{"ID":"B102","Book Title":"The Hobbit","Author":"J.R.R. Tolkien","Genre":"Fantasy","Interest Tags":"Dragons, Quests, Epic, Adventure","Location":"Shelf A-1","Status":"Available","Cover Image URL":"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRejXH8iZ-gYx7lYCxMImv6tTwXXnj-Tz4wO4U7_y8-VTa0vJu1v_mnrBA&s=10"},{"ID":"B103","Book Title":"Percy Jackson & The Lightning Thief","Author":"Rick Riordan","Genre":"Fantasy","Interest Tags":"Mythology, Gods, Monsters, Action","Location":"Shelf A-2","Status":"Issued","Cover Image URL":"https://m.media-amazon.com/images/I/81ClooUaWzL._AC_UF1000,1000_QL80_.jpg"},{"ID":"B104","Book Title":"A Game of Thrones","Author":"George R.R. Martin","Genre":"Fantasy","Interest Tags":"Politics, Kingdoms, Medieval, Dragons","Location":"Shelf A-2","Status":"Available","Cover Image URL":"https://m.media-amazon.com/images/I/81W4daKm5eL._AC_UF1000,1000_QL80_.jpg"},{"ID":"B105","Book Title":"The Golden Compass","Author":"Philip Pullman","Genre":"Fantasy","Interest Tags":"Magic, Parallel Worlds, Animals","Location":"Shelf A-3","Status":"Available","Cover Image URL":"https://resizing.flixster.com/-XZAfHZM39UwaGJIFWKAE8fS0ak=/v3/t/assets/p170996_p_v13_ab.jpg"},{"ID":"B106","Book Title":"Eragon","Author":"Christopher Paolini","Genre":"Fantasy","Interest Tags":"Dragons, Magic, Revenge, Adventure","Location":"Shelf A-3","Status":"Available","Cover Image URL":"https://d3osa46pggpx5f.cloudfront.net/medium/57_9780552552097_t1_1722002392.jpg"},{"ID":"B107","Book Title":"Dune","Author":"Frank Herbert","Genre":"Sci-Fi","Interest Tags":"Space, Planets, Empire, Destiny","Location":"Shelf B-1","Status":"Available","Cover Image URL":"https://m.media-amazon.com/images/I/81Ua99CURsL.jpg"},{"ID":"B108","Book Title":"Ender's Game","Author":"Orson Scott Card","Genre":"Sci-Fi","Interest Tags":"Space Warfare, Genius, Gaming, Aliens","Location":"Shelf B-1","Status":"Issued","Cover Image URL":"https://m.media-amazon.com/images/I/81c2Rdl-TXL._AC_UF1000,1000_QL80_.jpg"},{"ID":"B109","Book Title":"The Martian","Author":"Andy Weir","Genre":"Sci-Fi","Interest Tags":"Survival, Mars, Astronomy, Engineering","Location":"Shelf B-2","Status":"Available","Cover Image URL":"https://m.media-amazon.com/images/I/810W+zAp2DL._AC_UF1000,1000_QL80_.jpg"},{"ID":"B110","Book Title":"Ready Player One","Author":"Ernest Cline","Genre":"Sci-Fi","Interest Tags":"Virtual Reality, 80s, Gaming, VR","Location":"Shelf B-2","Status":"Available","Cover Image URL":"https://m.media-amazon.com/images/S/compressed.photo.goodreads.com/books/1500930947i/9969571.jpg"},{"ID":"B111","Book Title":"The Hitchhiker's Guide to the Galaxy","Author":"Douglas Adams","Genre":"Sci-Fi","Interest Tags":"Humor, Space Travel, Comedy, Aliens","Location":"Shelf B-3","Status":"Available","Cover Image URL":"https://m.media-amazon.com/images/M/MV5BMTg4OWYwZjgtZDU0ZS00NjU4LTkxNjItYmYyYmUwNDU5YmM3XkEyXkFqcGc@._V1_FMjpg_UX1000_.jpg"},{"ID":"B112","Book Title":"Neuromancer","Author":"William Gibson","Genre":"Sci-Fi","Interest Tags":"Cyberpunk, Hacking, AI, Future","Location":"Shelf B-3","Status":"Available","Cover Image URL":"https://upload.wikimedia.org/wikipedia/en/4/4b/Neuromancer_%28Book%29.jpg?utm_source=en.wikipedia.org&utm_campaign=index&utm_content=original"},{"ID":"B113","Book Title":"The Hunger Games","Author":"Suzanne Collins","Genre":"Dystopian","Interest Tags":"Survival, Rebellion, Archery, Action","Location":"Shelf C-1","Status":"Available","Cover Image URL":"https://m.media-amazon.com/images/I/71un2hI4mcL._AC_UF1000,1000_QL80_.jpg"},{"ID":"B114","Book Title":1984,"Author":"George Orwell","Genre":"Dystopian","Interest Tags":"Big Brother, Totalitarian, Mystery","Location":"Shelf C-1","Status":"Issued","Cover Image URL":"https://m.media-amazon.com/images/I/61HkdyBpKOL._AC_UF1000,1000_QL80_.jpg"},{"ID":"B115","Book Title":"Fahrenheit 451","Author":"Ray Bradbury","Genre":"Dystopian","Interest Tags":"Censorship, Future, Books, Firemen","Location":"Shelf C-2","Status":"Available","Cover Image URL":"https://m.media-amazon.com/images/I/61sKsbPb5GL._AC_UF1000,1000_QL80_.jpg"},{"ID":"B116","Book Title":"The Maze Runner","Author":"James Dashner","Genre":"Dystopian","Interest Tags":"Labyrinth, Survival, Mystery, Monsters","Location":"Shelf C-2","Status":"Available","Cover Image URL":"https://m.media-amazon.com/images/I/81n2SqdNXpL._AC_UF1000,1000_QL80_.jpg"},{"ID":"B117","Book Title":"Divergent ","Author":"Veronica Roth","Genre":"Dystopian","Interest Tags":"Factions, Courage, Identity, Action","Location":"Shelf C-3","Status":"Available","Cover Image URL":"https://m.media-amazon.com/images/I/91bxBYl307L.jpg"},{"ID":"B118","Book Title":"The Giver","Author":"Lois Lowry","Genre":"Dystopian","Interest Tags":"Memory, Perfect Society, Choice, Future","Location":"Shelf C-3","Status":"Available","Cover Image URL":"https://m.media-amazon.com/images/I/71GpyNeToCL._UF1000,1000_QL80_.jpg"},{"ID":"B119","Book Title":"Sherlock Holmes: A Study in Scarlet","Author":"Arthur Conan Doyle","Genre":"Mystery / Thriller","Interest Tags":"Detective, Crime, Logic, Victorian","Location":"Shelf D-1","Status":"Available","Cover Image URL":"https://m.media-amazon.com/images/I/61+E1mduSuL._AC_UF1000,1000_QL80_.jpg"},{"ID":"B120","Book Title":"And Then There Were None","Author":"Agatha Christie","Genre":"Mystery / Thriller","Interest Tags":"Island, Murder, Suspense, Classic","Location":"Shelf D-1","Status":"Issued","Cover Image URL":"https://www.crossword.in/cdn/shop/products/and-then-there-were-none-the-world-s-favourite-agatha-christie-book-paperback-agatha-christie-bk0006213-40553194717401.jpg?v=1775117079"},{"ID":"B121","Book Title":"The Girl with the Dragon Tattoo","Author":"Stieg Larsson","Genre":"Mystery / Thriller","Interest Tags":"Investigation, Hacking, Crime, Secrets","Location":"Shelf D-2","Status":"Available","Cover Image URL":"https://cdn.kobo.com/book-images/fef0b058-9b23-4ef7-87b5-c5512b0f088f/353/569/90/False/the-girl-with-the-dragon-tattoo-8.jpg"},{"ID":"B122","Book Title":"One of Us Is Lying","Author":"Karen M. McManus","Genre":"Mystery / Thriller","Interest Tags":"High School, Drama, Whodunit, Rumors","Location":"Shelf D-2","Status":"Available","Cover Image URL":"https://m.media-amazon.com/images/I/81cOaGbJ87L._AC_UF1000,1000_QL80_.jpg"},{"ID":"B123","Book Title":"Gone Girl","Author":"Gillian Flynn","Genre":"Mystery / Thriller","Interest Tags":"Psychological, Marriage, Twists, Crime","Location":"Shelf D-3","Status":"Available","Cover Image URL":"https://m.media-amazon.com/images/I/713e4Yk6brL._AC_UF1000,1000_QL80_.jpg"},{"ID":"B124","Book Title":"The Da Vinci Code","Author":"Dan Brown","Genre":"Mystery / Thriller","Interest Tags":"Codes, History, Art, Secret Societies","Location":"Shelf D-3","Status":"Available","Cover Image URL":"https://m.media-amazon.com/images/I/815WORuYMML.jpg"},{"ID":"B125","Book Title":"Atomic Habits","Author":"James Clear","Genre":"Self-Improvement","Interest Tags":"Mindset, Productivity, Habits, Focus","Location":"Shelf E-1","Status":"Available","Cover Image URL":"https://m.media-amazon.com/images/I/817HaeblezL._AC_UF1000,1000_QL80_.jpg"},{"ID":"B126","Book Title":"Think and Grow Rich","Author":"Napoleon Hill","Genre":"Self-Improvement","Interest Tags":"Success, Wealth, Mindset, Motivation","Location":"Shelf E-1","Status":"Available","Cover Image URL":"https://m.media-amazon.com/images/I/61IxJuRI39L._AC_UF1000,1000_QL80_.jpg"},{"ID":"B127","Book Title":"Deep Work","Author":"Cal Newport","Genre":"Self-Improvement","Interest Tags":"Focus, Productivity, Studying, Career","Location":"Shelf E-2","Status":"Issued","Cover Image URL":"https://m.media-amazon.com/images/I/71din4TLubL._UF1000,1000_QL80_.jpg"},{"ID":"B128","Book Title":"The 7 Habits of Highly Effective Teens","Author":"Sean Covey","Genre":"Self-Improvement","Interest Tags":"Teen Life, Leadership, Goals, Growth","Location":"Shelf E-2","Status":"Available","Cover Image URL":"https://m.media-amazon.com/images/I/81eZjzYD1IL._UF1000,1000_QL80_.jpg"},{"ID":"B129","Book Title":"Make Your Bed","Author":"William H. McRaven","Genre":"Self-Improvement","Interest Tags":"Discipline, Navy SEAL, Mindset, Life","Location":"Shelf E-3","Status":"Available","Cover Image URL":"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ26u7y0fBi-8r8dnzdRAPuo-vSksS2q0PW_fCC5ku46Q&s=10"},{"ID":"B130","Book Title":"Sapiens: A Brief History of Humankind","Author":"Yuval Noah Harari","Genre":"Non-Fiction / Science","Interest Tags":"Evolution, Human History, Anthropology","Location":"Shelf F-1","Status":"Available","Cover Image URL":"https://m.media-amazon.com/images/I/713jIoMO3UL._AC_UF1000,1000_QL80_.jpg"},{"ID":"B131","Book Title":"A Brief History of Time","Author":"Stephen Hawking","Genre":"Non-Fiction / Science","Interest Tags":"Physics, Cosmology, Black Holes, Universe","Location":"Shelf F-1","Status":"Available","Cover Image URL":"https://img.readthistwice.com/unsafe/240x360/books/d9320533-4ae6-43ed-8271-8b6f051db27f.jpg"},{"ID":"B132","Book Title":"Astrophysics for People in a Hurry","Author":"Neil deGrasse Tyson","Genre":"Non-Fiction / Science","Interest Tags":"Space, Cosmos, Astronomy, Quick Read","Location":"Shelf F-2","Status":"Available","Cover Image URL":"https://www.affordable-dissertation.co.uk/wp-content/uploads/2025/12/astrophysics-for-people-in-a-hurry-693b29062fe36-800x1024.webp"},{"ID":"B133","Book Title":"The Gene: An Intimate History","Author":"Siddhartha Mukherjee","Genre":"Non-Fiction / Science","Interest Tags":"Genetics, Biology, DNA, Medicine","Location":"Shelf F-2","Status":"Issued","Cover Image URL":"https://m.media-amazon.com/images/I/514qXalERqL._AC_UF1000,1000_QL80_.jpg"},{"ID":"B134","Book Title":"Born a Crime","Author":"Trevor Noah","Genre":"Biography / Memoir","Interest Tags":"Humor, South Africa, Growing Up, Life","Location":"Shelf F-3","Status":"Available","Cover Image URL":"https://m.media-amazon.com/images/I/912yTgFNUtL._AC_UF1000,1000_QL80_.jpg"},{"ID":"B135","Book Title":"The Diary of a Young Girl","Author":"Anne Frank","Genre":"Biography / History","Interest Tags":"World War II, History, Real Story, Diary","Location":"Shelf F-3","Status":"Available","Cover Image URL":"https://m.media-amazon.com/images/I/71ceSqifzCL._AC_UF1000,1000_QL80_.jpg"},{"ID":"B136","Book Title":"Steve Jobs","Author":"Walter Isaacson","Genre":"Biography","Interest Tags":"Tech, Apple, Innovation, Leadership","Location":"Shelf G-1","Status":"Available","Cover Image URL":"https://m.media-amazon.com/images/I/81yP+dpbmeL.jpg"},{"ID":"B137","Book Title":"Wings of Fire","Author":"A.P.J. Abdul Kalam","Genre":"Biography","Interest Tags":"Rocketry, India, Inspiration, Science","Location":"Shelf G-1","Status":"Available","Cover Image URL":"https://www.crossword.in/cdn/shop/files/61XPBLMmwsL._SL1400.jpg?v=1768031859"},{"ID":"B138","Book Title":"Shoe Dog","Author":"Phil Knight","Genre":"Biography","Interest Tags":"Nike, Business, Entrepreneurship, Sports","Location":"Shelf G-2","Status":"Available","Cover Image URL":"https://m.media-amazon.com/images/I/717LHuYp7uL._AC_UF1000,1000_QL80_.jpg"},{"ID":"B139","Book Title":"To Kill a Mockingbird","Author":"Harper Lee","Genre":"Classics","Interest Tags":"Justice, Coming of Age, Small Town","Location":"Shelf H-1","Status":"Available","Cover Image URL":"https://m.media-amazon.com/images/I/81bubXiOsDL._AC_UF1000,1000_QL80_.jpg"},{"ID":"B140","Book Title":"The Great Gatsby","Author":"F. Scott Fitzgerald","Genre":"Classics","Interest Tags":"1920s, Wealth, Drama, Love","Location":"Shelf H-1","Status":"Issued","Cover Image URL":"https://m.media-amazon.com/images/I/81TLiZrasVL._UF1000,1000_QL80_.jpg"},{"ID":"B141","Book Title":"Pride and Prejudice","Author":"Jane Austen","Genre":"Classics","Interest Tags":"Romance, 19th Century, Society, Drama","Location":"Shelf H-2","Status":"Available","Cover Image URL":"https://m.media-amazon.com/images/I/81a3sr-RgdL.jpg"},{"ID":"B142","Book Title":"Animal Farm","Author":"George Orwell","Genre":"Classics","Interest Tags":"Satire, Animals, Revolution, Politics","Location":"Shelf H-2","Status":"Available","Cover Image URL":"https://m.media-amazon.com/images/I/91Lbhwt5RzL._AC_UF1000,1000_QL80_.jpg"},{"ID":"B143","Book Title":"The Catcher in the Rye","Author":"J.D. Salinger","Genre":"Classics","Interest Tags":"Teen Angst, Growing Up, New York","Location":"Shelf H-3","Status":"Available","Cover Image URL":"https://m.media-amazon.com/images/I/614LavjvoLL._AC_UF1000,1000_QL80_.jpg"},{"ID":"B144","Book Title":"The Fault in Our Stars","Author":"John Green","Genre":"Young Adult","Interest Tags":"Romance, Emotional, Life, Friendship","Location":"Shelf I-1","Status":"Available","Cover Image URL":"https://cdn.penguin.co.in/wp-content/uploads/2023/06/9780141345659-2.jpg"},{"ID":"B145","Book Title":"Wonder","Author":"R.J. Palacio","Genre":"Young Adult","Interest Tags":"Kindness, School, Friendship, Family","Location":"Shelf I-1","Status":"Available","Cover Image URL":"https://m.media-amazon.com/images/I/71Q1KDTHXLL._AC_UF1000,1000_QL80_.jpg"},{"ID":"B146","Book Title":"The Book Thief","Author":"Markus Zusak","Genre":"Historical Fiction","Interest Tags":"World War II, Books, Courage, Emotional","Location":"Shelf I-2","Status":"Available","Cover Image URL":"https://m.media-amazon.com/images/I/71H2SJik5AL._AC_UF1000,1000_QL80_.jpg"},{"ID":"B147","Book Title":"Life of Pi","Author":"Yann Martel","Genre":"Adventure","Interest Tags":"Survival, Tiger, Ocean, Journey","Location":"Shelf I-2","Status":"Available","Cover Image URL":"https://m.media-amazon.com/images/I/91QaIM2JMRL._UF1000,1000_QL80_.jpg"},{"ID":"B148","Book Title":"Fahrenheit 451: The Graphic Novel","Author":"Tim Hamilton","Genre":"Graphic Novel","Interest Tags":"Comics, Future, Dystopian, Visual","Location":"Shelf J-1","Status":"Available","Cover Image URL":"https://m.media-amazon.com/images/I/81mUfc+x9kL._AC_UF350,350_QL50_.jpg"},{"ID":"B149","Book Title":"The Lightning Thief: Graphic Novel","Author":"Rick Riordan","Genre":"Graphic Novel","Interest Tags":"Mythology, Comics, Gods, Action","Location":"Shelf J-1","Status":"Issued","Cover Image URL":"https://m.media-amazon.com/images/I/81K6XsnCg2L.jpg"},{"ID":"B150","Book Title":"Becoming","Author":"Michelle Obama","Genre":"Biography","Interest Tags":"Inspiration, Leadership, Memoir, Life","Location":"Shelf G-2","Status":"Available","Cover Image URL":"https://m.media-amazon.com/images/I/81KGjsBXQ7L.jpg"}];
+const STORAGE_KEY = "shelfiq_books_v2";
+const API_KEY = "shelfiq_api_url"; // Optional backend key retained for compatibility.
+
+const genres = [
+  "All Genres","Fantasy","Sci-Fi","Dystopian","Mystery / Thriller",
+  "Self-Improvement","Non-Fiction / Science","Biography","Classics","Young Adult"
+];
+
+const vibes = [
+  {name:"All Vibes", icon:"✨", terms:[]},
+  {name:"Magic & Adventure", icon:"🪄", terms:["fantasy","magic","adventure","dragons","quests","mythology","gods","monsters","epic","wizards","kingdoms","medieval","parallel worlds","heroes","animals","action"]},
+  {name:"Space & Future", icon:"🚀", terms:["sci-fi","space","planets","empire","destiny","warfare","gaming","aliens","survival","mars","astronomy","engineering","virtual reality","vr","cyberpunk","hacking","ai","future","technology","dystopian"]},
+  {name:"Mindset & Growth", icon:"🌱", terms:["self-improvement","growth","habits","mindset","motivation","success","psychology","leadership","productivity","inspiration","memoir","life","resilience","learning"]},
+  {name:"Crime & Detective", icon:"🔎", terms:["mystery","thriller","crime","detective","investigation","suspense","spy","murder","whodunit","psychological","secrets"]},
+  {name:"Quick Inspired Reads", icon:"⚡", terms:["short","poetry","humor","comedy","friendship","kindness","quotes","visual","comics","graphic novel","life","inspiration","stories"]}
+];
+
+let books = loadBooks();
+let currentPage = "discover";
+let selectedGenre = "All Genres";
+let selectedVibe = "All Vibes";
+let discoverQuery = "";
+let catalogQuery = "";
+let catalogFilter = "all";
+let selectedId = null;
+let editingId = null;
+const ADMIN_PASSWORD = atob("MjA4MQ==");
+let adminMode = false;
+
+const quizQuestions = [
+  {
+    q:"What would make you want to keep turning the pages?",
+    options:[
+      ["A magical quest with heroes, creatures and adventure","Magic & Adventure"],
+      ["A story that helps me think, learn or grow","Mindset & Growth"],
+      ["Space travel, technology or an imagined future","Space & Future"],
+      ["A mystery that makes me solve clues and secrets","Crime & Detective"],
+      ["A short, fun or inspiring story I can finish quickly","Quick Inspired Reads"]
+    ]
+  },
+  {
+    q:"Pick a setting for your ideal book.",
+    options:[
+      ["A hidden castle, mythical world or enchanted forest","Magic & Adventure"],
+      ["A school, studio or real-life world full of ideas","Mindset & Growth"],
+      ["Mars, a spaceship or a futuristic city","Space & Future"],
+      ["A shadowy city, locked room or detective office","Crime & Detective"],
+      ["A café, classroom or everyday place with a memorable story","Quick Inspired Reads"]
+    ]
+  },
+  {
+    q:"Which main character sounds most interesting?",
+    options:[
+      ["A brave hero discovering a new world","Magic & Adventure"],
+      ["Someone rebuilding their life and chasing a goal","Mindset & Growth"],
+      ["A scientist, gamer, astronaut or tech genius","Space & Future"],
+      ["A detective following a trail nobody else sees","Crime & Detective"],
+      ["An ordinary person with an unexpectedly inspiring story","Quick Inspired Reads"]
+    ]
+  },
+  {
+    q:"What kind of feeling do you want while reading?",
+    options:[
+      ["Wonder and excitement","Magic & Adventure"],
+      ["Motivation and fresh ideas","Mindset & Growth"],
+      ["Curiosity about what the future could become","Space & Future"],
+      ["Suspense and the satisfaction of solving things","Crime & Detective"],
+      ["Easy enjoyment with a little inspiration","Quick Inspired Reads"]
+    ]
+  },
+  {
+    q:"What would you rather read about tonight?",
+    options:[
+      ["Dragons, quests, myths or daring journeys","Magic & Adventure"],
+      ["Habits, success, leadership or psychology","Mindset & Growth"],
+      ["AI, planets, survival, virtual reality or future worlds","Space & Future"],
+      ["Crime, hidden motives, spies or investigations","Crime & Detective"],
+      ["Friendship, humor, kindness, poetry or a quick graphic read","Quick Inspired Reads"]
+    ]
+  },
+  {
+    q:"How much time do you want to spend with your next book?",
+    options:[
+      ["I am happy to get lost in a long adventure","Magic & Adventure"],
+      ["I want ideas I can use in real life","Mindset & Growth"],
+      ["I want a detailed world to explore and imagine","Space & Future"],
+      ["I want a plot that keeps me guessing","Crime & Detective"],
+      ["Something engaging I can pick up for a quick read","Quick Inspired Reads"]
+    ]
+  }
+];
+let quizStep=0;
+let quizAnswers=[];
+let quizCompleted=false;
+
+function loadBooks() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    return raw ? JSON.parse(raw) : INITIAL_BOOKS.map(b => ({...b}));
+  } catch {
+    return INITIAL_BOOKS.map(b => ({...b}));
+  }
+}
+function saveBooks() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(books));
+}
+function qs(id) { return document.getElementById(id); }
+function esc(v) {
+  return String(v ?? "").replace(/[&<>"']/g, m => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#039;" }[m]));
+}
+function toast(msg) {
+  const t=qs("toast"); t.textContent=msg; t.classList.add("show");
+  clearTimeout(window.__toast); window.__toast=setTimeout(()=>t.classList.remove("show"),2200);
+}
+function go(page) {
+  if(page==="admin" && !adminMode){ toast("Turn on Admin Mode to open the admin panel"); return; }
+  currentPage=page;
+  document.querySelectorAll(".page").forEach(p=>p.classList.toggle("active",p.id==="page-"+page));
+  document.querySelectorAll(".nav button").forEach(b=>b.classList.toggle("active",b.dataset.page===page));
+  renderAll();
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+
+document.querySelectorAll(".nav button").forEach(b=>b.addEventListener("click",()=>{
+  if(b.dataset.page==="admin" && !adminMode){
+    toast("Turn on Admin Mode to open the admin panel");
+    return;
+  }
+  go(b.dataset.page);
+}));
+
+function renderAdminMode(){
+  const btn=qs("adminModeBtn");
+  btn.classList.toggle("on",adminMode);
+  btn.setAttribute("aria-pressed",adminMode?"true":"false");
+  qs("adminModeLabel").textContent=adminMode?"Admin Mode: On":"Admin Mode: Off";
+  const adminNav=document.querySelector('.nav button[data-page="admin"]');
+  if(adminNav) adminNav.classList.toggle("hidden",!adminMode);
+}
+function toggleAdminMode(){
+  if(adminMode){
+    adminMode=false;
+    renderAdminMode();
+    if(currentPage==="admin") go("discover");
+    toast("Admin Mode disabled");
+    return;
+  }
+
+  const password=window.prompt("Enter Admin Mode password:");
+  if(password===null) return;
+  if(password===ADMIN_PASSWORD){
+    adminMode=true;
+    renderAdminMode();
+    toast("Admin Mode enabled");
+  }else{
+    toast("Incorrect admin password");
+  }
+}
+
+function renderVibes() {
+  const match = vibes.find(v=>v.name===selectedVibe);
+  const strip=qs("vibeResultStrip");
+  const completed=quizCompleted;
+  // The main button always lets the user start the 6-question quiz.
+  qs("quizLaunchBtn").classList.remove("hidden");
+  if(match && selectedVibe!=="All Vibes" && completed) {
+    qs("vibeResultTitle").textContent = `Your vibe: ${match.icon} ${match.name}`;
+    qs("vibeResultSub").textContent = "Your Discover feed is filtered to matching themes and interest tags.";
+    strip.querySelector(".result-dot").textContent=match.icon;
+  } else {
+    qs("vibeResultTitle").textContent = "No vibe selected yet";
+    qs("vibeResultSub").textContent = "Take the quiz to get a personalized reading match.";
+    strip.querySelector(".result-dot").textContent="✨";
+  }
+}
+
+function persistQuizState(){
+  localStorage.setItem("shelfiq_quiz_completed", quizCompleted ? "1" : "0");
+  localStorage.setItem("shelfiq_quiz_vibe", selectedVibe);
+}
+function loadQuizState(){
+  quizCompleted=localStorage.getItem("shelfiq_quiz_completed")==="1";
+  const saved=localStorage.getItem("shelfiq_quiz_vibe");
+  if(quizCompleted && saved && vibes.some(v=>v.name===saved)) selectedVibe=saved;
+}
+
+function openQuiz(){
+  quizStep=0; quizAnswers=[]; qs("quizResult").style.display="none"; qs("quizQuestion").style.display="block"; qs("quizOptions").style.display="grid"; qs("quizFooter").style.display="flex";
+  qs("quizModal").classList.add("show"); renderQuizQuestion();
+}
+function closeQuiz(){qs("quizModal").classList.remove("show");}
+function renderQuizQuestion(){
+  const q=quizQuestions[quizStep];
+  qs("quizProgress").textContent=`Question ${quizStep+1} of ${quizQuestions.length}`;
+  qs("quizProgressFill").style.width=((quizStep+1)/quizQuestions.length*100)+"%";
+  qs("quizQuestion").innerHTML=`<h2>${esc(q.q)}</h2><p>Pick one answer.</p>`;
+  const prior=quizAnswers[quizStep];
+  qs("quizOptions").innerHTML=q.options.map((o,i)=>`<button class="quiz-option ${prior===o[1]?"selected":""}" data-vibe="${esc(o[1])}"><span class="quiz-letter">${String.fromCharCode(65+i)}</span><span>${esc(o[0])}</span></button>`).join("");
+  qs("quizOptions").querySelectorAll(".quiz-option").forEach(btn=>btn.addEventListener("click",()=>{
+    quizAnswers[quizStep]=btn.dataset.vibe;
+    qs("quizOptions").querySelectorAll(".quiz-option").forEach(x=>x.classList.remove("selected")); btn.classList.add("selected");
+    setTimeout(()=>{ if(quizStep<quizQuestions.length-1){quizStep++;renderQuizQuestion();}else{finishQuiz();}},180);
+  }));
+}
+function finishQuiz(){
+  const scores={}; vibes.filter(v=>v.name!=="All Vibes").forEach(v=>scores[v.name]=0);
+  quizAnswers.forEach(a=>{if(a && scores[a]!==undefined)scores[a]++;});
+  const ranked=Object.entries(scores).sort((a,b)=>b[1]-a[1]);
+  selectedVibe=ranked[0]?.[0] || "All Vibes";
+  quizCompleted=true;
+  persistQuizState();
+  renderDiscover();
+  renderVibes();
+  const winner=vibes.find(v=>v.name===selectedVibe);
+  qs("quizQuestion").style.display="none"; qs("quizOptions").style.display="none"; qs("quizFooter").style.display="none";
+  qs("quizProgress").textContent="Your reading vibe is ready";
+  qs("quizResult").style.display="block";
+  qs("quizResult").innerHTML=`<div style="font-size:24px">${winner.icon}</div><div class="big-vibe">${esc(winner.name)}</div><p>ShelfIQ found your strongest match from your answers. Your Discover feed is now filtered for this vibe.</p><div class="quiz-result-actions"><button class="btn primary" id="quizSeeBooksBtn">See My Matches</button></div>`;
+  qs("quizSeeBooksBtn").addEventListener("click",()=>{closeQuiz(); renderDiscover(); window.scrollTo({top:0,behavior:"smooth"});});
+  }
+
+function renderGenres() {
+  qs("genreList").innerHTML = genres.map(g=>`
+    <label class="genre-option">
+      <input type="radio" name="genre" ${selectedGenre===g?"checked":""} value="${esc(g)}"/>
+      <span>${esc(g)}</span>
+    </label>`).join("");
+  qs("genreList").querySelectorAll("input").forEach(input=>input.addEventListener("change",()=>{
+    selectedGenre=input.value; renderDiscover();
+  }));
+}
+
+function vibeMatch(book) {
+  if (selectedVibe==="All Vibes") return true;
+  const v=vibes.find(x=>x.name===selectedVibe);
+  const hay=(book.Genre+" "+book["Interest Tags"]+" "+book["Book Title"]).toLowerCase();
+  return v.terms.some(term=>hay.includes(term));
+}
+
+function genreMatch(book) {
+  if(selectedGenre==="All Genres") return true;
+  const genre=String(book.Genre||"").toLowerCase();
+  const requested=selectedGenre.toLowerCase();
+  if(requested==="young adult") return genre==="young adult" || genre.includes("young adult");
+  return genre===requested;
+}
+
+function queryMatch(book, q) {
+  if(!q.trim()) return true;
+  const hay=Object.values(book).join(" ").toLowerCase();
+  return hay.includes(q.trim().toLowerCase());
+}
+
+function discoverBooks() {
+  return books.filter(b=>genreMatch(b)&&vibeMatch(b)&&queryMatch(b,discoverQuery));
+}
+
+function coverMarkup(book, detail=false) {
+  const id=detail?"detailCover":"cover";
+  return `<img src="${esc(book["Cover Image URL"])}" alt="${esc(book["Book Title"])}" onerror="this.style.display='none'; this.parentElement.querySelector('.cover-fallback').style.display='flex';" />
+  <div class="cover-fallback"><div><div class="fallback-title">${esc(book["Book Title"])}</div><div style="margin-top:6px;color:#667">${esc(book.Author)}</div></div></div>`;
+}
+
+function renderDiscover() {
+  renderVibes(); renderGenres();
+  const list=discoverBooks();
+  qs("discoverResultCount").textContent=list.length;
+  qs("discoverResultHint").textContent = `${books.length} cataloged • ${selectedVibe==="All Vibes"?"All vibes":selectedVibe}${selectedGenre==="All Genres"?"":" • "+selectedGenre}`;
+  const returnBtn=qs("returnAllBooksBtn");
+  const retakeBtn=qs("retakeQuizResultsBtn");
+  const quizFilterActive=selectedVibe!=="All Vibes" && quizCompleted;
+  returnBtn.classList.toggle("hidden", !quizFilterActive);
+  retakeBtn.classList.toggle("hidden", !quizFilterActive);
+  qs("discoverGrid").innerHTML = list.length ? list.map(book=>`
+    <article class="book-card" data-id="${esc(book.ID)}">
+      <div class="cover-box">${coverMarkup(book)}<span class="status-badge ${book.Status==="Issued"?"issued":"available"}">${esc(book.Status)}</span></div>
+      <div class="book-body">
+        <h3 class="book-title">${esc(book["Book Title"])}</h3>
+        <div class="book-author">by ${esc(book.Author)}</div>
+        <div class="book-meta">
+          <div class="meta-row"><span class="meta-icon">📍</span><span>Shelf: ${esc(book.Location)}</span></div>
+          <div class="meta-row tag-row"><span class="meta-icon">🏷️</span><span>${esc(book["Interest Tags"])}</span></div>
+        </div>
+      </div>
+    </article>`).join("") : `<div class="empty-state"><strong>No books match those filters.</strong><br/>Try another vibe, genre, or search phrase.</div>`;
+  qs("discoverGrid").querySelectorAll(".book-card").forEach(card=>card.addEventListener("click",()=>openBook(card.dataset.id)));
+}
+
+function renderCatalog() {
+  const filtered=books.filter(b=>{
+    const qOk=queryMatch(b,catalogQuery);
+    if(!qOk) return false;
+    if(catalogFilter==="fantasy-stack") return String(b.Location).startsWith("Shelf A-");
+    if(catalogFilter==="scifi-stack") return String(b.Location).startsWith("Shelf B-");
+    if(catalogFilter==="issued") return b.Status==="Issued";
+    return true;
+  });
+  qs("kpiTotal").textContent=books.length;
+  qs("catalogBody").innerHTML=filtered.map(b=>`
+    <tr>
+      <td>${esc(b.ID)}</td><td>${esc(b["Book Title"])}</td><td>${esc(b.Author)}</td>
+      <td>${esc(b.Genre)}</td><td>${esc(b.Location)}</td>
+      <td class="status-text ${b.Status==="Issued"?"issued":"available"}">${esc(b.Status)}</td>
+    </tr>`).join("") || `<tr><td colspan="6" style="text-align:center;padding:36px;color:#777">No matching catalog records.</td></tr>`;
+
+  document.querySelectorAll("#catalogTabs .pill-tab").forEach(tab=>tab.classList.toggle("active",tab.dataset.filter===catalogFilter));
+  renderShelfMap();
+}
+
+function shelfGroups() {
+  const groups={};
+  books.forEach(b=>{
+    const loc=String(b.Location||"");
+    const m=loc.match(/Shelf\s+([A-Z])-(\d+)/i);
+    const letter=m?m[1].toUpperCase():"Other";
+    const num=m?m[2]:"";
+    const key=letter;
+    if(!groups[key]) groups[key]=[];
+    groups[key].push({...b,shelfNumber:num});
+  });
+  return groups;
+}
+
+function renderShelfMap() {
+  const groups=shelfGroups();
+  const keys=Object.keys(groups).sort();
+  const html=keys.map(letter=>{
+    const arr=groups[letter], available=arr.filter(b=>b.Status==="Available").length;
+    return `<button class="shelf-tile" data-shelf="${esc(letter)}">
+      <div class="shelf-letter">${esc(letter==="Other"?"—":letter)}</div>
+      <div class="shelf-name">${letter==="Other"?"Other locations":"Shelf "+letter}</div>
+      <div class="shelf-count">${arr.length} title${arr.length===1?"":"s"} · ${available} available</div>
+      <div class="shelf-note">${letter==="A"?"Fantasy Bay":letter==="B"?"Sci‑Fi Bay":"Browse shelf"}</div>
+    </button>`;
+  }).join("");
+  qs("shelfMapGrid").innerHTML=html;
+  qs("modalShelfGrid").innerHTML=html;
+  document.querySelectorAll("[data-shelf]").forEach(el=>el.addEventListener("click",()=>{
+    closeShelfModal(); go("catalog");
+    catalogQuery="Shelf "+el.dataset.shelf;
+    qs("catalogSearch").value=catalogQuery;
+    catalogFilter="all"; renderCatalog();
+  }));
+}
+
+function renderAdmin() {
+  const available=books.filter(b=>b.Status==="Available").length, issued=books.filter(b=>b.Status==="Issued").length;
+  qs("adminTotal").textContent=books.length;
+  qs("adminAvailable").textContent=available+" titles";
+  qs("adminIssued").textContent=issued+" titles";
+  qs("adminBody").innerHTML=books.map(b=>`
+    <tr class="selectable ${selectedId===b.ID?"selected":""}" data-select="${esc(b.ID)}">
+      <td>${esc(b.ID)}</td><td>${esc(b["Book Title"])}</td><td>${esc(b.Author)}</td>
+      <td>${esc(b.Genre)}</td><td>${esc(b.Location)}</td><td>${esc(b.Status)}</td>
+    </tr>`).join("");
+  qs("adminBody").querySelectorAll("[data-select]").forEach(row=>row.addEventListener("click",()=>selectRecord(row.dataset.select)));
+  if (!qs("fGenre").options.length) qs("fGenre").innerHTML=genres.filter(x=>x!=="All Genres").map(g=>`<option>${esc(g)}</option>`).join("");
+}
+
+function populateForm(book) {
+  qs("fId").value=book.ID||"";
+  qs("fTitle").value=book["Book Title"]||"";
+  qs("fAuthor").value=book.Author||"";
+  qs("fGenre").value=book.Genre||"";
+  qs("fTags").value=book["Interest Tags"]||"";
+  qs("fLocation").value=book.Location||"";
+  qs("fCover").value=book["Cover Image URL"]||"";
+  document.querySelectorAll('input[name="fStatus"]').forEach(r=>r.checked=(r.value===book.Status));
+  qs("saveBookBtn").textContent="Update Book Record";
+  editingId=book.ID; selectedId=book.ID;
+}
+
+function clearForm() {
+  qs("bookForm").reset();
+  document.querySelector('input[name="fStatus"][value="Available"]').checked=true;
+  qs("saveBookBtn").textContent="Save Book Record";
+  editingId=null;
+  selectedId=null;
+  renderAdmin();
+}
+
+function selectRecord(id) {
+  const b=books.find(x=>x.ID===id); if(!b) return;
+  populateForm(b); renderAdmin();
+}
+
+function nextId() {
+  const nums=books.map(b=>parseInt(String(b.ID||"").replace(/\D/g,""),10)).filter(Number.isFinite);
+  return "B"+((nums.length?Math.max(...nums):100)+1);
+}
+
+async function apiCall(payload, method="POST") {
+  const url=localStorage.getItem(API_KEY);
+  if(!url) return {ok:false,skipped:true};
+  try {
+    if(method==="GET") {
+      const r=await fetch(url); return await r.json();
+    }
+    const r=await fetch(url,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(payload)});
+    const txt=await r.text();
+    try { return JSON.parse(txt); } catch { return {ok:true}; }
+  } catch(e) { return {ok:false,error:String(e)}; }
+}
+
+qs("bookForm").addEventListener("submit", async e=>{
+  e.preventDefault();
+  const status=document.querySelector('input[name="fStatus"]:checked').value;
+  let id=qs("fId").value.trim();
+  if(!id) id=editingId||nextId();
+  const book={
+    ID:id,
+    "Book Title":qs("fTitle").value.trim(),
+    Author:qs("fAuthor").value.trim(),
+    Genre:qs("fGenre").value,
+    "Interest Tags":qs("fTags").value.trim(),
+    Location:qs("fLocation").value.trim(),
+    Status:status,
+    "Cover Image URL":qs("fCover").value.trim()
+  };
+  if(editingId) {
+    books=books.map(b=>b.ID===editingId?book:b);
+    const res=await apiCall({action:"update",...book});
+    toast(res.ok===false && !res.skipped ? "Updated locally; Sheet sync failed" : "Book record updated");
+  } else {
+    if(books.some(b=>b.ID===id)) { toast("That accession ID already exists"); return; }
+    books=[book,...books];
+    const res=await apiCall({action:"add",...book});
+    toast(res.ok===false && !res.skipped ? "Added locally; Sheet sync failed" : "Book added to ShelfIQ");
+  }
+  saveBooks(); clearForm(); renderAll();
+});
+
+async function removeSelected() {
+  if(!selectedId) {toast("Select a record first");return;}
+  const b=books.find(x=>x.ID===selectedId); if(!b)return;
+  if(!confirm(`Remove "${b["Book Title"]}" from the catalog?`))return;
+  books=books.filter(x=>x.ID!==selectedId);
+  await apiCall({action:"delete",id:selectedId});
+  selectedId=null; editingId=null; saveBooks(); clearForm(); renderAll(); toast("Book removed");
+}
+
+async function setStatus(status) {
+  if(!selectedId) {toast("Select a record first");return;}
+  const b=books.find(x=>x.ID===selectedId); if(!b)return;
+  b.Status=status; await apiCall({action:"update",...b});
+  saveBooks(); populateForm(b); renderAll(); toast(status==="Issued"?"Marked as issued":"Marked as returned");
+}
+
+qs("discoverSearch").addEventListener("input",e=>{discoverQuery=e.target.value;renderDiscover();});
+qs("returnAllBooksBtn").addEventListener("click",()=>{selectedVibe="All Vibes"; persistQuizState(); renderDiscover(); window.scrollTo({top:0,behavior:"smooth"});});
+qs("catalogSearch").addEventListener("input",e=>{catalogQuery=e.target.value;renderCatalog();});
+document.querySelectorAll("#catalogTabs .pill-tab").forEach(t=>t.addEventListener("click",()=>{catalogFilter=t.dataset.filter;renderCatalog();}));
+qs("quizLaunchBtn").addEventListener("click",openQuiz);
+qs("retakeQuizResultsBtn").addEventListener("click",openQuiz);
+qs("quizClose").addEventListener("click",closeQuiz);
+qs("quizModal").addEventListener("click",e=>{if(e.target.id==="quizModal")closeQuiz();});
+qs("manageTitlesBtn").addEventListener("click",()=>go("admin"));
+qs("adminModeBtn").addEventListener("click",toggleAdminMode);
+qs("clearFormBtn").addEventListener("click",clearForm);
+qs("markIssuedBtn").addEventListener("click",()=>setStatus("Issued"));
+qs("markReturnedBtn").addEventListener("click",()=>setStatus("Available"));
+qs("removeSelectedBtn").addEventListener("click",removeSelected);
+qs("auditBtn").addEventListener("click",()=>toast("Barcode audit is ready for integration with your scanner workflow"));
+function bookSummary(book) {
+  const title=String(book["Book Title"]||"");
+  const summaries={
+    "Harry Potter and the Sorcerer's Stone":"Harry discovers a hidden magical world, makes new friends, and begins his first unforgettable year at Hogwarts.",
+    "The Hobbit":"Bilbo Baggins leaves his quiet home for an unexpected journey filled with riddles, danger, friendship, and a dragon.",
+    "Percy Jackson & The Lightning Thief":"Percy learns that Greek myths are real and sets out on a dangerous quest to prevent a war among the gods.",
+    "A Game of Thrones":"Noble families struggle for power across a dangerous kingdom where loyalty, ambition, and survival collide.",
+    "The Golden Compass":"Lyra begins an extraordinary journey through unfamiliar worlds while uncovering a powerful secret about Dust.",
+    "Eragon":"A young farm boy discovers a dragon egg and is drawn into an ancient conflict involving magic, dragons, and a ruthless ruler.",
+    "Dune":"Paul Atreides is caught in a struggle over the desert planet Arrakis, its valuable spice, and the forces fighting for control.",
+    "Ender's Game":"A gifted child is trained through intense simulations and strategy games for a conflict that may decide humanity's future.",
+    "The Martian":"After being stranded on Mars, astronaut Mark Watney must use science, ingenuity, and determination to survive and get home.",
+    "Ready Player One":"A teenager races through a massive virtual world to solve a creator's hidden puzzles before powerful rivals can claim the prize.",
+    "Atomic Habits":"A practical guide to building better habits through small, repeatable changes and systems that make progress easier to sustain.",
+    "The 7 Habits of Highly Effective People":"A classic personal-development guide focused on principles, responsibility, priorities, and building effective relationships.",
+    "Think and Grow Rich":"A motivational classic exploring goal-setting, persistence, focused thinking, and the habits often associated with achievement.",
+    "Ikigai":"A gentle exploration of purpose, everyday meaning, balance, and the practices that can contribute to a fulfilling life.",
+    "The Alchemist":"A young shepherd follows a dream across the desert and learns about courage, purpose, and listening to his heart.",
+    "Wings of Fire: An Autobiography of A.P.J. Abdul Kalam":"A.P.J. Abdul Kalam recounts his childhood, education, scientific career, and journey to becoming a major public figure in India.",
+    "Steve Jobs":"A biography of Steve Jobs tracing his career, ideas, products, setbacks, and influence on the technology industry.",
+    "Einstein: His Life and Universe":"A narrative biography following Einstein's life, scientific breakthroughs, personality, and impact on modern physics.",
+    "The Diary of a Young Girl":"Anne Frank's diary records everyday life, hopes, fears, and observations while her family hides during World War II.",
+    "The Little Prince":"A pilot meets a mysterious young prince whose conversations reveal thoughtful lessons about friendship, love, responsibility, and seeing beyond appearances.",
+    "Animal Farm":"Farm animals create a new society, but the struggle for equality changes as power becomes concentrated in the hands of a few.",
+    "1984":"Winston Smith lives under constant surveillance and begins questioning a system that controls information, language, and individual thought.",
+    "To Kill a Mockingbird":"Scout grows up in a small Southern town and learns difficult lessons about justice, prejudice, empathy, and courage.",
+    "Pride and Prejudice":"Elizabeth Bennet navigates family pressures, misunderstandings, and first impressions while reconsidering what she thinks of Mr. Darcy.",
+    "The Great Gatsby":"A mysterious millionaire's parties draw Nick Carraway into a story of ambition, longing, wealth, and the past.",
+  }
+  return summaries[title] || `${title} by ${book.Author} offers a ${String(book.Genre||"book").toLowerCase()} reading experience shaped by themes such as ${String(book["Interest Tags"]||"discovery").replace(/,\s*/g, ", ")}.`;
+}
+
+function openBook(id) {
+  const b=books.find(x=>x.ID===id); if(!b)return;
+  const tags=String(b["Interest Tags"]||"").split(",").map(s=>s.trim()).filter(Boolean);
+  qs("bookDetail").innerHTML=`
+    <div class="detail-grid">
+      <div class="detail-cover">${coverMarkup(b,true)}</div>
+      <div class="detail-info">
+        <h2>${esc(b["Book Title"])}</h2>
+        <div class="byline">by ${esc(b.Author)} · <strong style="color:${b.Status==="Issued"?"#b91c1c":"#202020"}">${esc(b.Status)}</strong></div>
+        <div class="detail-item"><div class="detail-label">Summary</div><div class="summary-text">${esc(bookSummary(b))}</div></div>
+        <div class="detail-item"><div class="detail-label">Genre</div><div>${esc(b.Genre)}</div></div>
+        <div class="detail-item"><div class="detail-label">Location</div><div>📍 ${esc(b.Location)}</div></div>
+        <div class="detail-item"><div class="detail-label">Interest Tags</div><div class="tags">${tags.map(t=>`<span class="tag">${esc(t)}</span>`).join("")}</div></div>
+        <div class="detail-item"><div class="detail-label">Accession ID</div><div>${esc(b.ID)}</div></div>
+      </div>
+    </div>`;
+  qs("bookModal").classList.add("show");
+}
+function closeBook(){qs("bookModal").classList.remove("show");}
+function closeShelfModal(){qs("shelfModal").classList.remove("show");}
+qs("bookModalClose").addEventListener("click",closeBook);
+qs("shelfModalClose").addEventListener("click",closeShelfModal);
+qs("bookModal").addEventListener("click",e=>{if(e.target.id==="bookModal")closeBook();});
+qs("shelfModal").addEventListener("click",e=>{if(e.target.id==="shelfModal")closeShelfModal();});
+qs("shelfMapBtn").addEventListener("click",()=>{renderShelfMap();qs("shelfModal").classList.add("show");});
+window.addEventListener("keydown",e=>{if(e.key==="Escape"){closeBook();closeShelfModal();}});
+
+function renderAll() {
+  renderAdminMode();
+  renderDiscover();
+  renderCatalog();
+  renderAdmin();
+}
+loadQuizState();
+renderAll();
+</script>
+</body>
+</html>
